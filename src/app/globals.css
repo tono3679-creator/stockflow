@@ -1,0 +1,131 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * StockFlow のデザイン：Minimal / Modern / Functional
+ *   背景 #FAFAF9・面 #FFFFFF・文字 #18181B・補助の文字 #71717A・境界線 #E4E4E7
+ *   色を使うのは状態（欠品＝赤・在庫不足＝アンバー・正常＝グリーン）と、主要な操作（落ち着いたブルー）だけ
+ */
+:root {
+  --radius: 0.5rem;
+  --background: #fafaf9;
+  --foreground: #18181b;
+  --card: #ffffff;
+  --card-foreground: #18181b;
+  --popover: #ffffff;
+  --popover-foreground: #18181b;
+  --primary: #2f5fd0;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
+  --brand: #2f5fd0;
+  --brand-foreground: #ffffff;
+  --brand-soft: #eef3fd;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --danger-soft: #fef2f2;
+  --danger-strong: #b91c1c;
+  --warning: #d97706;
+  --warning-soft: #fffbeb;
+  --warning-strong: #b45309;
+  --success: #16a34a;
+  --success-soft: #f0fdf4;
+  --success-strong: #15803d;
+  --info-soft: #eef3fd;
+  --info-strong: #2f5fd0;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #2f5fd0;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #3f3f46;
+  --sidebar-muted: #a1a1aa;
+  --sidebar-accent: #f4f4f5;
+  --sidebar-border: #e4e4e7;
+  /* グラフ（1系列目＝ブルー、2系列目＝オレンジ。色覚の違いでも見分けられる組み合わせ） */
+  --chart-1: #2f5fd0;
+  --chart-2: #eb6834;
+  --chart-3: #1baf7a;
+  --chart-grid: #f0f0f1;
+  --chart-muted: #d4d4d8;
+}
+
+@theme inline {
+  --font-sans: "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-soft: var(--brand-soft);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-strong: var(--success-strong);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-strong: var(--warning-strong);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-strong: var(--danger-strong);
+  --color-info-soft: var(--info-soft);
+  --color-info-strong: var(--info-strong);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "palt" 1;
+    line-break: strict;
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+  /* 数字は桁がそろう等幅の数字にする（表・KPI の比較がしやすい） */
+  .tabular,
+  td,
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.text-keep {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
