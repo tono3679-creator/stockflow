@@ -11,7 +11,7 @@ declare global {
 
 /**
  * データベース接続（サーバー専用）。
- * 公開環境では Supabase の接続プーラー（Supavisor の Transaction モード）を通すため prepare: false。
+ * 公開環境では接続プーラー（Neon の PgBouncer・Supabase の Supavisor の Transaction モード）を通すため prepare: false。
  */
 export function db(): Sql {
   globalThis.__sfSql ??= postgres(toPostgresJsUrl(serverEnv.databaseUrl), {

@@ -56,7 +56,7 @@ export async function migrate(sql: Sql, log: (line: string) => void = console.lo
 async function main() {
   const url = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL を設定してください");
-  // 接続プーラーの Transaction モードを通さない接続（DATABASE_URL_UNPOOLED：Supabase の Session pooler など）があればそちらを使う
+  // 接続プーラーの Transaction モードを通さない接続（DATABASE_URL_UNPOOLED：Neon の直接接続・Supabase の Session pooler）があればそちらを使う
   const sql = postgres(toPostgresJsUrl(url), { max: 1, prepare: false, onnotice: () => {} });
   try {
     await migrate(sql);
