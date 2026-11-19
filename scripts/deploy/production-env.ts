@@ -1,7 +1,7 @@
 /** 公開環境に必要な環境変数の確認（足りないものを日本語で返す） */
 export function checkProductionEnv(env: Record<string, string | undefined>): string[] {
   const errors: string[] = [];
-  if (!env.DATABASE_URL) errors.push("DATABASE_URL：Supabase の接続文字列（Transaction pooler・ポート 6543）を設定してください");
+  if (!env.DATABASE_URL) errors.push("DATABASE_URL：Vercel の Storage から Neon を接続するか、Supabase の接続文字列（Transaction pooler）を設定してください");
   const pw = env.SEED_LOGIN_PASSWORD ?? "";
   if (pw.length < 12) errors.push("SEED_LOGIN_PASSWORD：見本の組織のログイン用パスワード（12文字以上）を設定してください");
   else if (pw === "stockflow-demo-2026") errors.push("SEED_LOGIN_PASSWORD：README に載っているローカル用の値は使えません");

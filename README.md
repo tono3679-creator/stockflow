@@ -54,11 +54,11 @@
 | | |
 | --- | --- |
 | 画面・サーバー | Next.js 16（App Router・Server Actions）、React 19、TypeScript、Tailwind CSS 4、Radix UI、Recharts、react-hook-form＋zod |
-| データベース | PostgreSQL（Supabase）。postgres.js で接続し、トランザクションごとに `authenticated` ロールと利用者の情報を設定して RLS を効かせる |
+| データベース | PostgreSQL（Neon。Supabase でも可）。postgres.js で接続し、トランザクションごとに `authenticated` ロールと利用者の情報を設定して RLS を効かせる |
 | 業務ロジック | 在庫・発注・入荷・取込の書き込みは `security definer` の DB 関数だけ（利用者は表に直接書き込めない） |
-| PDF | pdf-lib＋IPAゴシック（A4・日本語）。Supabase Storage に保存（任意） |
+| PDF | pdf-lib＋IPAゴシック（A4・日本語）。Supabase Storage への保存にも対応（任意） |
 | テスト | Vitest（単体・DB）、Playwright（PC・スマホの E2E） |
-| 公開 | Vercel（東京 hnd1）＋ Supabase（東京） |
+| 公開 | Vercel（sin1）＋ Neon（シンガポール） |
 
 設計の詳細は [docs/DESIGN.md](docs/DESIGN.md) を参照してください。
 
@@ -88,45 +88,34 @@ npm run test:e2e       # ブラウザ（デモの一連の流れ・在庫不足�
 
 DB テストと E2E はローカルの PostgreSQL を使います（`npm run db:local:reset && npm run db:seed` の後に実行）。GitHub Actions（`.github/workflows/ci.yml`）でも同じものを実行します。
 
-## 公開（Vercel ＋ Supabase）
+## 公開（Vercel ＋ Neon）
 
-GitHub Pages では動きません（サーバーと DB が必要です）。
-
-### 1. Supabase（本人の操作）
-
-1. [Supabase](https://supabase.com/dashboard) で **New project**。Region は **Northeast Asia (Tokyo)**。Database Password は控えておく。
-2. 作成後、上部の **Connect** を開き、次の2つの接続文字列を控える（`[YOUR-PASSWORD]` は 1 のパスワードに置き換える）。
-   - **Transaction pooler**（ポート 6543）… `DATABASE_URL`
-   - **Session pooler**（ポート 5432）… `DATABASE_URL_UNPOOLED`
-3. （任意・発注書 PDF を Storage に保存する場合）**Project Settings → API Keys** の `service_role`（Secret）キーと、**Project URL** を控える。
-   - service_role キーは強い権限を持つ秘密の値です。Vercel の環境変数にだけ登録し、`NEXT_PUBLIC_` を付けない・人に見せないでください。
-4. このアプリは Supabase の Data API・Auth を使いません（すべてのテーブルは匿名キーからは読めない設定です）。気になる場合は **Project Settings → Data API** で無効にしてかまいません。
-
-テーブル・関数・Storage のバケットは、次の Vercel のビルドで自動で作られます（手で SQL を流す必要はありません）。
-
-### 2. Vercel
+GitHub Pages では動きません（サーバーと DB が必要です）。データベースは Vercel の画面からつなげる Neon（PostgreSQL）を使います。Supabase の PostgreSQL でも同じように動きます（下の「Supabase を使う場合」）。
 
 1. [Vercel](https://vercel.com/new) でこのリポジトリをインポート（Framework は Next.js のまま）。
-2. **Environment Variables** に登録：
+2. **Environment Variables** に2つ登録して **Deploy**。
+   | 名前 | 値 |
+   | --- | --- |
+   | `SEED_LOGIN_PASSWORD` | 見本の会社のログイン用パスワード（12文字以上・自分で決める） |
+   | `CRON_SECRET` | 16文字以上のランダムな文字列（毎日の定期処理用） |
+3. 初回のビルドは `DATABASE_URL` が無いので失敗します（想定どおり）。
+4. プロジェクトの **Storage → Create Database → Neon** を選ぶ。Region は **Singapore**、プランは Free。**Connect Project** で Production と Preview にチェックし、Custom Prefix は空のまま。`DATABASE_URL` と `DATABASE_URL_UNPOOLED` が自動で入ります。
+5. **Deployments** で最新のものを **Redeploy**。本番のビルドでだけ、マイグレーション → 見本の会社の作成 が自動で行われます（`scripts/deploy/vercel-build.ts`）。プレビューのビルドでは DB を変更しません。テーブルや関数を手で作る必要はありません。
+6. 毎日 3:00（日本時間）に、期限切れのデモの削除と見本の会社の作り直しが行われます（`vercel.json` の Cron）。
 
-| 名前 | 値 |
-| --- | --- |
-| `DATABASE_URL` | Supabase の Transaction pooler の接続文字列 |
-| `DATABASE_URL_UNPOOLED` | Supabase の Session pooler の接続文字列 |
-| `SEED_LOGIN_PASSWORD` | 見本の会社のログイン用パスワード（12文字以上・自分で決める） |
-| `CRON_SECRET` | 16文字以上のランダムな文字列（毎日の定期処理用） |
-| `SUPABASE_URL`（任意） | Project URL |
-| `SUPABASE_SERVICE_ROLE_KEY`（任意） | service_role キー |
-
-3. **Deploy**。本番のビルドでだけ、マイグレーション → 見本の会社の作成 が自動で行われます（`scripts/deploy/vercel-build.ts`）。プレビューのビルドでは DB を変更しません。
-4. 毎日 3:00（日本時間）に、期限切れのデモの削除と見本の会社の作り直しが行われます（`vercel.json` の Cron）。
+Vercel の関数は Neon と同じシンガポール（`sin1`）で動かします（Neon には東京リージョンが無いため、DB の近くに置いています）。
 
 公開後は GitHub Actions の **Production E2E**（`production-e2e.yml`、入力に公開 URL）で、公開環境に対して E2E を実行できます。
+
+### Supabase を使う場合
+
+- `DATABASE_URL` に Supabase の **Transaction pooler**（ポート 6543）、`DATABASE_URL_UNPOOLED` に **Session pooler**（ポート 5432）の接続文字列を登録します。`vercel.json` の `regions` は `hnd1`（東京）に変えてください。
+- 発注書 PDF を Supabase Storage にも保存したい場合だけ、`SUPABASE_URL` と `SUPABASE_SERVICE_ROLE_KEY`（強い権限を持つ秘密の値。`NEXT_PUBLIC_` を付けない）を登録します。登録しなくても PDF はダウンロードできます。
 
 ## 仕様からの変更点
 
 - **ログインは Supabase Auth ではなく、アプリ内のログイン**（`app_auth` スキーマ、scrypt でハッシュ化したパスワードと HttpOnly Cookie のセッション）です。訪問者ごとのデモ会社を作って即ログインさせる仕組みを、外部サービスの設定なしで確実に動かすためです。RLS は Supabase と同じ `auth.uid()`・`authenticated` ロールの形で書いているので、Supabase Auth へ移すときもポリシーは変えずに済みます。
-- Supabase の機能のうち使うのは PostgreSQL と（任意で）Storage です。
+- 公開環境の DB は Supabase ではなく Neon にしています（Supabase の無料プランで作れるプロジェクト数の上限のため）。アプリは標準の PostgreSQL だけを使うので、Supabase にもそのまま載せられます。
 
 ## ディレクトリ
 
